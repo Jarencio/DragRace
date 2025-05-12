@@ -327,7 +327,7 @@
     .track-record .safe { background-color: rgba(192, 192, 192, 0.3); }
     .track-record .low { background-color: rgba(205, 127, 50, 0.3); }
     .track-record .bottom { background-color: rgba(255, 77, 77, 0.3); }
-    .track-record .eliminated { background-color: rgba(0, 0, 0, 0.3); }
+    .track-record .elim { background-color: rgba(0, 0, 0, 0.3); }
     
     .card-selection {
       display: flex;
@@ -1257,6 +1257,8 @@
       eliminatedQueens: [],
       winner: null,
       relationships: {}, // Store queen relationships
+      // Add this new property to track episode-by-episode performance
+      episodePerformances: {}, // Will store each queen's performance by episode
       // Finale state
       finaleQueens: [],
       finalePairs: [],
@@ -1977,6 +1979,7 @@ const runwayThemes = [
       const count = parseInt(document.getElementById('queens-count').value);
       gameState.queens = [];
       gameState.relationships = {};
+      gameState.episodePerformances = {}; // Initialize episode performances
       
       // Create queens
       for (let i = 1; i <= count; i++) {
@@ -1985,8 +1988,9 @@ const runwayThemes = [
         const img = previewDiv.querySelector('img');
         const imageUrl = img.src;
         
+        const queenId = i;
         gameState.queens.push({
-          id: i,
+          id: queenId,
           name: name,
           imageUrl: imageUrl,
           status: 'active',
@@ -1999,6 +2003,9 @@ const runwayThemes = [
           points: 0,
           eliminated: false
         });
+        
+        // Initialize episode performances for this queen
+        gameState.episodePerformances[queenId] = {};
       }
       
       // Store relationships
@@ -2233,30 +2240,60 @@ const runwayThemes = [
         const queenObj = gameState.queens.find(q => q.id === queen.id);
         queenObj.wins++;
         queenObj.points += 5; // 5 points for WIN
+        
+        // Record performance for this episode
+        if (!gameState.episodePerformances[gameState.currentEpisode]) {
+          gameState.episodePerformances[gameState.currentEpisode] = {};
+        }
+        gameState.episodePerformances[gameState.currentEpisode][queen.id] = "WIN";
       });
       
       gameState.placements.high.forEach(queen => {
         const queenObj = gameState.queens.find(q => q.id === queen.id);
         queenObj.highs++;
         queenObj.points += 4; // 4 points for HIGH
+        
+        // Record performance for this episode
+        if (!gameState.episodePerformances[gameState.currentEpisode]) {
+          gameState.episodePerformances[gameState.currentEpisode] = {};
+        }
+        gameState.episodePerformances[gameState.currentEpisode][queen.id] = "HIGH";
       });
       
       gameState.placements.safe.forEach(queen => {
         const queenObj = gameState.queens.find(q => q.id === queen.id);
         queenObj.safes++;
         queenObj.points += 3; // 3 points for SAFE
+        
+        // Record performance for this episode
+        if (!gameState.episodePerformances[gameState.currentEpisode]) {
+          gameState.episodePerformances[gameState.currentEpisode] = {};
+        }
+        gameState.episodePerformances[gameState.currentEpisode][queen.id] = "SAFE";
       });
       
       gameState.placements.low.forEach(queen => {
         const queenObj = gameState.queens.find(q => q.id === queen.id);
         queenObj.lows++;
         queenObj.points += 2; // 2 points for LOW
+        
+        // Record performance for this episode
+        if (!gameState.episodePerformances[gameState.currentEpisode]) {
+          gameState.episodePerformances[gameState.currentEpisode] = {};
+        }
+        gameState.episodePerformances[gameState.currentEpisode][queen.id] = "LOW";
       });
       
       gameState.placements.bottom.forEach(queen => {
         const queenObj = gameState.queens.find(q => q.id === queen.id);
         queenObj.bottoms++;
         queenObj.points += 1; // 1 point for BTM
+        
+        // Record performance for this episode
+        if (!gameState.episodePerformances[gameState.currentEpisode]) {
+          gameState.episodePerformances[gameState.currentEpisode] = {};
+        }
+        gameState.episodePerformances[gameState.currentEpisode][queen.id] = "BTM";
       });
       
       // Display placements
@@ -2466,6 +2503,12 @@ const runwayThemes = [
           // Move from bottom to low in placements
           gameState.placements.bottom = gameState.placements.bottom.filter(q => q.id !== queen.id);
           gameState.placements.low.push(queen);
+          
+          // Update episode performance from BTM to LOW
+          if (!gameState.episodePerformances[gameState.currentEpisode]) {
+            gameState.episodePerformances[gameState.currentEpisode] = {};
+          }
+          gameState.episodePerformances[gameState.currentEpisode][queen.id] = "LOW";
         });
         
         // Show start lipsync button
@@ -2556,6 +2599,12 @@ const runwayThemes = [
         const loser = gameState.queens.find(q => q.id === gameState.lipsynQueen2.id);
         loser.eliminated = true;
         loser.points = 0; // Reset to 0 points for ELIM
+        
+        // Record ELIM status for the eliminated queen
+        if (!gameState.episodePerformances[gameState.currentEpisode]) {
+          gameState.episodePerformances[gameState.currentEpisode] = {};
+        }
+        gameState.episodePerformances[gameState.currentEpisode][loser.id] = "ELIM";
       } else {
         document.getElementById('lipsync-queen-2').classList.add('winner');
         // Only mark the loser as eliminated
@@ -2564,6 +2613,12 @@ const runwayThemes = [
         const loser = gameState.queens.find(q => q.id === gameState.lipsynQueen1.id);
         loser.eliminated = true;
         loser.points = 0; // Reset to 0 points for ELIM
+        
+        // Record ELIM status for the eliminated queen
+        if (!gameState.episodePerformances[gameState.currentEpisode]) {
+          gameState.episodePerformances[gameState.currentEpisode] = {};
+        }
+        gameState.episodePerformances[gameState.currentEpisode][loser.id] = "ELIM";
       }
       
       // Show result
@@ -2615,15 +2670,15 @@ const runwayThemes = [
           <thead>
             <tr>
               <th>Queen</th>
-              <th>Image</th>
-              <th>Status</th>
-              <th>Placement</th>
-              <th>Points</th>
-              <th>WIN</th>
-              <th>HIGH</th>
-              <th>SAFE</th>
-              <th>LOW</th>
-              <th>BTM</th>
+              <th>TR</th>
+      `;
+      
+      // Add episode columns
+      for (let i = 1; i <= gameState.currentEpisode; i++) {
+        tableHTML += `<th>EP ${i}</th>`;
+      }
+      
+      tableHTML += `
             </tr>
           </thead>
           <tbody>
@@ -2638,20 +2693,32 @@ const runwayThemes = [
       });
       
       sortedQueens.forEach(queen => {
+        // Calculate average score (TR)
+        const totalEpisodes = queen.wins + queen.highs + queen.safes + queen.lows + queen.bottoms + (queen.eliminated ? 1 : 0);
+        const totalPoints = queen.wins * 5 + queen.highs * 4 + queen.safes * 3 + queen.lows * 2 + queen.bottoms * 1;
+        const avgScore = totalEpisodes > 0 ? (totalPoints / totalEpisodes).toFixed(2) : "0.00";
+        
         tableHTML += `
           <tr>
             <td>${queen.name}</td>
-            <td><img src="${queen.imageUrl}" alt="${queen.name}" width="50" height="50" style="border-radius: 50%; object-fit: cover;"></td>
-            <td>${queen.eliminated ? 'ELIM' : 'ACTIVE'}</td>
-            <td><strong>${queen.placement || "-"}</strong></td>
-            <td>${queen.points}</td>
-            <td class="${queen.wins > 0 ? 'win' : ''}">${queen.wins}</td>
-            <td class="${queen.highs > 0 ? 'high' : ''}">${queen.highs}</td>
-            <td class="${queen.safes > 0 ? 'safe' : ''}">${queen.safes}</td>
-            <td class="${queen.lows > 0 ? 'low' : ''}">${queen.lows}</td>
-            <td class="${queen.bottoms > 0 ? 'bottom' : ''}">${queen.bottoms}</td>
-          </tr>
+            <td>${avgScore}</td>
         `;
+        
+        // Add episode performances
+        for (let i = 1; i <= gameState.currentEpisode; i++) {
+          const performance = gameState.episodePerformances[i] && gameState.episodePerformances[i][queen.id];
+          let cellClass = '';
+          let cellText = '—';
+          
+          if (performance) {
+            cellClass = performance.toLowerCase();
+            cellText = performance;
+          }
+          
+          tableHTML += `<td class="${cellClass}">${cellText}</td>`;
+        }
+        
+        tableHTML += `</tr>`;
       });
       
       tableHTML += `
@@ -2986,13 +3053,7 @@ const runwayThemes = [
             <tr>
               <th>Placement</th>
               <th>Queen</th>
-              <th>Image</th>
-              <th>Points</th>
-              <th>WIN</th>
-              <th>HIGH</th>
-              <th>SAFE</th>
-              <th>LOW</th>
-              <th>BTM</th>
+              <th>Track Record</th>
             </tr>
           </thead>
           <tbody>
@@ -3000,36 +3061,26 @@ const runwayThemes = [
       
       // Sort queens by placement
       const sortedQueens = [...gameState.queens].sort((a, b) => {
-        if (a.placement === "1st") return -1;
-        if (b.placement === "1st") return 1;
-        if (a.placement === "2nd") return -1;
-        if (b.placement === "2nd") return 1;
-        if (a.placement === "3rd" || a.placement === "3rd/4th") return -1;
-        if (b.placement === "3rd" || b.placement === "3rd/4th") return 1;
-        
-        // Extract numeric part of placement (e.g., "5th" -> 5)
-        const aNum = parseInt(a.placement);
-        const bNum = parseInt(b.placement);
-        
-        if (!isNaN(aNum) && !isNaN(bNum)) {
-          return aNum - bNum;
+        // Eliminated queens go last
+        if (a.eliminated !== b.eliminated) {
+          return a.eliminated ? 1 : -1;
         }
         
+        // Sort by placement if available
+        if (a.placement && b.placement) {
+          return a.placement.localeCompare(b.placement);
+        }
+        
+        // Otherwise, maintain original order
         return 0;
       });
       
       sortedQueens.forEach(queen => {
         tableHTML += `
           <tr>
-            <td><strong>${queen.placement || "-"}</strong></td>
+            <td>${queen.placement || 'Eliminated'}</td>
             <td>${queen.name}</td>
-            <td><img src="${queen.imageUrl}" alt="${queen.name}" width="50" height="50" style="border-radius: 50%; object-fit: cover;"></td>
-            <td>${queen.points}</td>
-            <td class="${queen.wins > 0 ? 'win' : ''}">${queen.wins}</td>
-            <td class="${queen.highs > 0 ? 'high' : ''}">${queen.highs}</td>
-            <td class="${queen.safes > 0 ? 'safe' : ''}">${queen.safes}</td>
-            <td class="${queen.lows > 0 ? 'low' : ''}">${queen.lows}</td>
-            <td class="${queen.bottoms > 0 ? 'bottom' : ''}">${queen.bottoms}</td>
+            <td>${queen.wins} WIN, ${queen.highs} HIGH, ${queen.safes} SAFE, ${queen.lows} LOW, ${queen.bottoms} BTM</td>
           </tr>
         `;
       });
@@ -3042,42 +3093,22 @@ const runwayThemes = [
       return tableHTML;
     }
 
-    // Create confetti effect
+    // Create confetti
     function createConfetti() {
-      const colors = ['#ff00ff', '#00ffff', '#ffcc00', '#4dff4d', '#ff4d4d', '#9b59b6'];
+      const colors = ['#f0f', '#0ff', '#ff0', '#fff'];
       
-      for (let i = 0; i < 200; i++) {
+      for (let i = 0; i < 100; i++) {
         const confetti = document.createElement('div');
         confetti.className = 'confetti';
-        confetti.style.left = Math.random() * 100 + 'vw';
+        confetti.style.left = `${Math.random() * 100}vw`;
         confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-        confetti.style.width = (Math.random() * 15 + 5) + 'px';
-        confetti.style.height = (Math.random() * 15 + 5) + 'px';
-        confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
-        confetti.style.animationDelay = (Math.random() * 2) + 's';
-        
-        // Add different shapes
-        if (Math.random() > 0.5) {
-          confetti.style.borderRadius = '50%';
-        } else if (Math.random() > 0.5) {
-          confetti.style.borderRadius = '5px';
-          confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
-        }
-        
+        confetti.style.animationDelay = `${Math.random() * 5}s`;
         document.body.appendChild(confetti);
-        
-        // Remove confetti after animation
-        setTimeout(() => {
-          confetti.remove();
-        }, 5000);
       }
     }
 
     // Restart the game
     function restartGame() {
-      // Clear all confetti
-      document.querySelectorAll('.confetti').forEach(c => c.remove());
-      
       // Reset game state
       gameState = {
         queens: [],
@@ -3093,32 +3124,27 @@ const runwayThemes = [
         eliminatedQueens: [],
         winner: null,
         relationships: {},
+        episodePerformances: {},
         finaleQueens: [],
         finalePairs: [],
         finaleRound: 0,
         currentFinalePair: 0
       };
       
-      // Go back to setup screen
+      // Remove confetti
+      document.querySelectorAll('.confetti').forEach(confetti => confetti.remove());
+      
+      // Show setup screen
       showScreen(setupScreen);
       generateQueenInputs();
     }
 
     // Helper function to show a screen and hide others
     function showScreen(screenToShow) {
-      const screens = [
-        setupScreen, challengeScreen, performanceScreen, placementScreen,
-        bottomScreen, secondQueenScreen, lipsynScreen, trackRecordScreen,
-        finaleScreen, finaleLipsynScreen, winnerScreen
-      ];
-      
-      screens.forEach(screen => {
-        screen.classList.remove('active');
-      });
-      
+      const screens = document.querySelectorAll('.screen');
+      screens.forEach(screen => screen.classList.remove('active'));
       screenToShow.classList.add('active');
-      
-      // Scroll to top
-      window.scrollTo(0, 0);
     }
   </script>
+</body>
+</html>
