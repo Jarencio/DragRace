@@ -32,8 +32,6 @@ let gameState = {
   finaleRunwayLooks: [],
 }
 
-let episode = 0;
-
 // Default queen images
 const defaultQueenImages = ["Screen.png"]
 
@@ -75,17 +73,17 @@ const challenges = [
 
 // Finale-specific challenges
 const finaleChallenges = [
-  "Rumix Performance",
+  "Grand Finale Performance",
+  "Rumix Challenge",
+  "Talent Show Extravaganza",
   "Music Video Shoot",
-  "Choreographed Final Number",
-  "Solo Lip Sync Performance",
-  "Talent Show",
-  "Top 4 Verse Writing Challenge",
-  "Live Finale Performance",
-  "Final Speech",
-  "Drag Race Vegas Revue",
-  "Solo Showcase Performance"
-];
+  "Choreography Challenge",
+  "Final Four Verse Challenge",
+  "Ultimate Performance Challenge",
+  "Legacy Showcase",
+  "Crown-Worthy Performance",
+  "Final Act Spectacular",
+]
 
 const runwayThemes = [
   // Season 1–17 Themes
@@ -157,38 +155,18 @@ const finaleRunwayThemes = [
 ]
 
 // Ball categories for finale
-
 const finaleBallCategories = [
-  // Classic Finale Balls
-  ["Executive Realness", "Red Carpet Ready", "Crowning Eleganza Extravaganza"],
-  ["Signature Drag", "Best Drag", "Grand Finale Eleganza"],
-  ["Royal Entrance", "Queendom Realness", "Coronation Couture"],
-  
-  // Winner's Circle Balls
-  ["Hall of Fame Entrance", "Legacy Realness", "Winner's Circle Eleganza"],
-  ["First Challenge Redux", "Journey Showcase", "Champion's Culmination"],
-  ["Past Winner Tribute", "Personal Brand", "Next Drag Superstar"],
-  ["Entrance Look Elevated", "Makeover Masterpiece", "Crown Worthy Eleganza"],
-  ["Day Time Drama", "Evening Excellence", "Final Spotlight Eleganza"],
-  
-  // Crowning Moment Balls
-  ["Winner's Entrance", "Victory Lap Runway", "Crowning Glory"],
-  ["Humble Beginnings", "Rising Star", "Superstar Supremacy"],
-  ["Before The Crown", "Worthy Competitor", "Coronation Fantasy"],
-  ["First Impressions", "Growth Narrative", "Final Form Eleganza"],
-  ["Fan Favorite Moment", "Judge's Darling", "Ultimate Champion Eleganza"],
-  
-  // Grand Finale Balls
-  ["Red Carpet Arrival", "Reunion Ready", "Finale Showstopper"],
-  ["Hometown Pride", "Brand Ambassador", "Reigning Excellence"],
-  ["Look At My Success", "Born For This", "Crown Me Now Eleganza"],
-  ["Before The Fame", "Current Celebrity", "Future Legacy Eleganza"],
-  
-  // Championship Balls
-  ["First Lady Realness", "Queen's Court", "Supreme Ruler Eleganza"],
-  ["Golden Ticket", "Winner's Circle", "Hall of Fame Induction"],
-  ["Scepter Worthy", "Crown Jewels", "Reigning Monarch Eleganza"]
-];
+  ["Executive Realness", "Red Carpet Ready", "Eleganza Extravaganza"],
+  ["Daytime Drama", "Evening Elegance", "Grand Finale Extravaganza"],
+  ["Signature Drag", "Inspired By Your Roots", "Best Drag Eleganza"],
+  ["First Time In Drag", "Hometown Glory", "Crown-Worthy Couture"],
+  ["Entrance Look Realness", "Favorite Runway Redux", "Final Form Fantasy"],
+  ["Royalty In The Making", "Drag Family Values", "Coronation Eleganza"],
+  ["Drag On A Dime", "High Fashion Couture", "Winner's Circle Eleganza"],
+  ["Monochromatic Madness", "Avant-Garde Artistry", "Crowning Glory"],
+  ["Throwback Excellence", "Future Of Drag", "Legacy Eleganza"],
+  ["Personal Style", "Judges' Panel Realness", "Grand Finale Showstopper"],
+]
 
 // Lipsync songs
 const lipsynSongs = [
@@ -888,8 +866,6 @@ let runwaystorage = ""
 
 // Announce the challenge for the current episode
 function announceChallenge() {
-
-  episode++;
   // Select a random challenge
   const challengeIndex = Math.floor(Math.random() * challenges.length)
   gameState.currentChallenge = challenges[challengeIndex]
@@ -971,15 +947,16 @@ function performChallenge() {
     let runwayDescription = ""
 
     if (!gameState.isRunwayChallenge) {
-      runwayScore = Math.floor(Math.random() * 21) // 0-30
+      // Generate runway score from 1 to 10
+      runwayScore = Math.floor(Math.random() * 10) + 1
 
-      if (runwayScore >= 18) {
+      if (runwayScore >= 9) {
         runwayLevel = "amazing"
-      } else if (runwayScore >= 15) {
+      } else if (runwayScore >= 7) {
         runwayLevel = "great"
-      } else if (runwayScore >= 12) {
+      } else if (runwayScore >= 5) {
         runwayLevel = "good"
-      } else if (runwayScore >= 9) {
+      } else if (runwayScore >= 3) {
         runwayLevel = "mediocre"
       } else {
         runwayLevel = "bad"
@@ -1462,7 +1439,7 @@ function determineLipsynWinner() {
   const luck = Math.floor(Math.random() * 11)
 
   // Handle double shantay (both stay)
-  if (bothShantayOption  && Stay == 0 && luck >= 4) {
+  if (bothShantayOption && Stay == 0 && luck >= 5) {
     document.getElementById("lipsync-queen-1").classList.add("winner")
     document.getElementById("lipsync-queen-2").classList.add("winner")
     Stay++
@@ -1480,10 +1457,8 @@ function determineLipsynWinner() {
     }, 1500)
     return
   }
-
-  //
   // Handle double sashay (both leave)
-  else if (bothSashayOption && Sashay == 0 && luck >= 5 ) {
+  else if (bothSashayOption && Sashay == 0 && luck >= 5) {
     // Mark both queens as eliminated
     const loser1 = gameState.queens.find((q) => q.id === gameState.lipsynQueen1.id)
     loser1.eliminated = true
@@ -1578,28 +1553,6 @@ function determineLipsynWinner() {
       document.getElementById("determine-winner").onclick = showTrackRecord
     }, 1500)
   }
-
-  // Show result
-  const winner = queen1Wins ? gameState.lipsynQueen1 : gameState.lipsynQueen2
-  const eliminated = queen1Wins ? gameState.lipsynQueen2 : gameState.lipsynQueen1
-
-  // Update placement for eliminated queen
-  const eliminatedQueen = gameState.queens.find((q) => q.id === eliminated.id)
-  const remainingQueens = gameState.queens.filter((q) => !q.eliminated).length
-  eliminatedQueen.placement = `${remainingQueens + 1}`
-
-  setTimeout(() => {
-    const lipsynResult = document.getElementById("lipsync-result")
-    lipsynResult.innerHTML = `
-          <h3>${winner.name}, shantay you stay!</h3>
-          <p>${eliminated.name}, sashay away...</p>
-          <p>${eliminated.name} finishes in ${eliminatedQueen.placement} place.</p>
-        `
-    lipsynResult.style.display = "block"
-
-    document.getElementById("determine-winner").textContent = "Show Track Record"
-    document.getElementById("determine-winner").onclick = showTrackRecord
-  }, 1500)
 }
 
 // Helper function to get ordinal suffix
@@ -1802,11 +1755,11 @@ function startFinaleLipsyncs() {
     // Performance score (0-100) - 40% of total
     const performanceScore = Math.floor(Math.random() * 41) + 60 // 60-100
 
-    // Generate 3 runway scores (0-100) - 10% each, 30% total
+    // Generate 3 runway scores (1-10) - 10% each, 30% total
     const runwayScores = [
-      Math.floor(Math.random() * 11), // 60-100
-      Math.floor(Math.random() * 11), // 60-100
-      Math.floor(Math.random() * 11), // 60-100
+      Math.floor(Math.random() * 10) + 1, // 1-10
+      Math.floor(Math.random() * 10) + 1, // 1-10
+      Math.floor(Math.random() * 10) + 1, // 1-10
     ]
 
     // Get queen object with points
@@ -1816,7 +1769,9 @@ function startFinaleLipsyncs() {
     // Performance: 40%, Runways: 30% (10% each), Season Points: 30%
     const weightedPerformance = performanceScore * 0.4
     const weightedRunway = runwayScores[0] + runwayScores[1] + runwayScores[2]
-    const weightedSeasonPoints = (queenObj.points/episode) * 6 
+    const weightedSeasonPoints = (queenObj.points / (gameState.currentEpisode - 1)) * 6
+
+    console.log("Calculation: (" + queenObj.points + "/" + gameState.currentEpisode + ") * 6 = " + weightedSeasonPoints)
 
     const totalScore = weightedPerformance + weightedRunway + weightedSeasonPoints
 
@@ -1831,13 +1786,27 @@ function startFinaleLipsyncs() {
       weightedSeasonPoints: weightedSeasonPoints,
       totalScore: totalScore,
     })
+
+    // Add console logs for debugging
+    console.log(`Finale Performance for ${queen.name}:`)
+    console.log(`- Performance Score: ${performanceScore} (weighted: ${weightedPerformance.toFixed(1)})`)
+    console.log(`- Runway Scores: ${runwayScores.join(", ")} (weighted: ${weightedRunway.toFixed(1)})`)
+    console.log(`- Season Points: ${queenObj.points} (weighted: ${weightedSeasonPoints.toFixed(1)})`)
+    console.log(`- Total Score: ${totalScore.toFixed(1)}`)
   })
 
   // Sort by total score (highest first)
   gameState.finalePerformances.sort((a, b) => b.totalScore - a.totalScore)
 
+  // Log the sorted performances for debugging
+  console.log("Sorted Finale Performances:")
+  gameState.finalePerformances.forEach((perf, index) => {
+    console.log(`${index + 1}. ${perf.queen.name}: ${perf.totalScore.toFixed(1)}`)
+  })
+
   // Select top 2 queens
   const top2Queens = [gameState.finalePerformances[0].queen, gameState.finalePerformances[1].queen]
+  console.log(`Top 2 Queens: ${top2Queens[0].name} and ${top2Queens[1].name}`)
 
   // Set placements for eliminated queens (3rd/4th)
   for (let i = 2; i < gameState.finalePerformances.length; i++) {
@@ -1884,7 +1853,7 @@ function startFinaleLipsyncs() {
             <td>${perf.runwayScores[1]}</td>
             <td>${perf.runwayScores[2]}</td>
             <td>${perf.seasonPoints} (${perf.weightedSeasonPoints.toFixed(1)})</td>
-            <td class="total-score" style="display: ${gameState.showTotalScores ? "table-cell" : "none"}"><strong>${perf.totalScore.toFixed(1)}</strong></td>
+            <td class="total-score"><strong>${perf.totalScore.toFixed(1)}</strong></td>
           </tr>
         `,
           )
@@ -1892,14 +1861,12 @@ function startFinaleLipsyncs() {
       </tbody>
     </table>
     
-    <button id="reveal-scores" class="reveal-btn" style="display: ${gameState.showTotalScores ? "none" : "block"}">Reveal Total Scores</button>
-    
-    <div id="top2-announcement" class="announcement" style="margin-top: 20px; display: ${gameState.showTotalScores ? "block" : "none"}">
+    <div id="top2-announcement" class="announcement" style="margin-top: 20px;">
       <h3>Top 2 Queens</h3>
       <p>${top2Queens[0].name} and ${top2Queens[1].name} will now lipsync for the crown!</p>
     </div>
     
-    <div id="top2-queens" class="queen-list" style="display: ${gameState.showTotalScores ? "block" : "none"}">
+    <div id="top2-queens" class="queen-list">
       <div class="queen-card win">
         <img src="${top2Queens[0].imageUrl}" alt="${top2Queens[0].name}" class="queen-image">
         <h3>${top2Queens[0].name}</h3>
@@ -1911,25 +1878,17 @@ function startFinaleLipsyncs() {
         <p><strong>Total Score:</strong> ${gameState.finalePerformances[1].totalScore.toFixed(1)}</p>
       </div>
     </div>
+    
+    <button id="start-final-lipsync" class="reveal-btn">Start Final Lipsync</button>
   `
 
-  // Add event listener to reveal scores button
-  document.getElementById("reveal-scores").addEventListener("click", () => {
-    gameState.showTotalScores = true
-    document.querySelectorAll(".total-score").forEach((el) => (el.style.display = "table-cell"))
-    document.getElementById("reveal-scores").style.display = "none"
-    document.getElementById("top2-announcement").style.display = "block"
-    document.getElementById("top2-queens").style.display = "block"
-  })
-
-  // Start the final lipsync when scores are revealed
-  if (gameState.showTotalScores) {
-    startFinalLipsync()
-  }
+  // Add event listener to start final lipsync button
+  document.getElementById("start-final-lipsync").addEventListener("click", startFinalLipsync)
 }
 
 // Start final lipsync between top 2
 function startFinalLipsync() {
+  console.log(`Starting final lipsync between ${gameState.lipsynQueen1.name} and ${gameState.lipsynQueen2.name}`)
   // Select random lipsync song from finale songs
   const song = finaleLipsynSongs[Math.floor(Math.random() * finaleLipsynSongs.length)]
 
@@ -1951,7 +1910,7 @@ function startFinalLipsync() {
       <p>Preparing to slay...</p>
       <div class="queen-stats" style="margin-top: 10px; font-size: 0.9rem;">
         <p><strong>Performance (40%):</strong> ${queen1Perf.performanceScore} (${queen1Perf.weightedPerformance.toFixed(1)})</p>
-        <p><strong>Runways (30%):</strong> ${((queen1Perf.runwayScores[0] + queen1Perf.runwayScores[1] + queen1Perf.runwayScores[2]) / 3).toFixed(1)} (${queen1Perf.weightedRunway.toFixed(1)})</p>
+        <p><strong>Runways (30%):</strong> ${queen1Perf.runwayScores.join(", ")} (${queen1Perf.weightedRunway.toFixed(1)})</p>
         <p><strong>Season (30%):</strong> ${queen1Perf.seasonPoints} (${queen1Perf.weightedSeasonPoints.toFixed(1)})</p>
       </div>
     </div>
@@ -1962,7 +1921,7 @@ function startFinalLipsync() {
       <p>Preparing to slay...</p>
       <div class="queen-stats" style="margin-top: 10px; font-size: 0.9rem;">
         <p><strong>Performance (40%):</strong> ${queen2Perf.performanceScore} (${queen2Perf.weightedPerformance.toFixed(1)})</p>
-        <p><strong>Runways (30%):</strong> ${((queen2Perf.runwayScores[0] + queen2Perf.runwayScores[1] + queen2Perf.runwayScores[2]) / 3).toFixed(1)} (${queen2Perf.weightedRunway.toFixed(1)})</p>
+        <p><strong>Runways (30%):</strong> ${queen2Perf.runwayScores.join(", ")} (${queen2Perf.weightedRunway.toFixed(1)})</p>
         <p><strong>Season (30%):</strong> ${queen2Perf.seasonPoints} (${queen2Perf.weightedSeasonPoints.toFixed(1)})</p>
       </div>
     </div>
@@ -2011,7 +1970,7 @@ function determineFinaleWinner() {
     <p class="lipsync-performance">${gameState.lipsynQueen1.name} ${queen1Description}</p>
     <div class="queen-stats" style="margin-top: 10px; font-size: 0.9rem;">
       <p><strong>Performance (40%):</strong> ${queen1Perf.performanceScore} (${queen1Perf.weightedPerformance.toFixed(1)})</p>
-      <p><strong>Runways (30%):</strong> ${((queen1Perf.runwayScores[0] + queen1Perf.runwayScores[1] + queen1Perf.runwayScores[2]) / 3).toFixed(1)} (${queen1Perf.weightedRunway.toFixed(1)})</p>
+      <p><strong>Runways (30%):</strong> ${queen1Perf.runwayScores.join(", ")} (${queen1Perf.weightedRunway.toFixed(1)})</p>
       <p><strong>Season (30%):</strong> ${queen1Perf.seasonPoints} (${queen1Perf.weightedSeasonPoints.toFixed(1)})</p>
       <p><strong>Total Score:</strong> ${queen1Perf.totalScore.toFixed(1)}</p>
     </div>
@@ -2024,7 +1983,7 @@ function determineFinaleWinner() {
     <p class="lipsync-performance">${gameState.lipsynQueen2.name} ${queen2Description}</p>
     <div class="queen-stats" style="margin-top: 10px; font-size: 0.9rem;">
       <p><strong>Performance (40%):</strong> ${queen2Perf.performanceScore} (${queen2Perf.weightedPerformance.toFixed(1)})</p>
-      <p><strong>Runways (30%):</strong> ${((queen2Perf.runwayScores[0] + queen2Perf.runwayScores[1] + queen2Perf.runwayScores[2]) / 3).toFixed(1)} (${queen2Perf.weightedRunway.toFixed(1)})</p>
+      <p><strong>Runways (30%):</strong> ${queen2Perf.runwayScores.join(", ")} (${queen2Perf.weightedRunway.toFixed(1)})</p>
       <p><strong>Season (30%):</strong> ${queen2Perf.seasonPoints} (${queen2Perf.weightedSeasonPoints.toFixed(1)})</p>
       <p><strong>Total Score:</strong> ${queen2Perf.totalScore.toFixed(1)}</p>
     </div>
@@ -2275,3 +2234,5 @@ console.log("Drag Race Simulator updated with enhanced finale format!")
 console.log("- Finale now has a ball with 3 runway looks")
 console.log("- Scoring weights: Performance 40%, Runways 30%, Season Points 30%")
 console.log("- Final placements display matches track record format")
+console.log("- Runway scores now use 1-10 scale")
+console.log("- Season Points calculation updated")
