@@ -1434,7 +1434,7 @@ function determineLipsynWinner() {
   // Determine winner based on scores
   const queen1Wins = queen1Score >= queen2Score
   const bothShantayOption = queen1Score > 85 && queen2Score > 85
-  const bothSashayOption = queen1Score < 60 && queen2Score < 60
+  const bothSashayOption = queen1Score < 70 && queen2Score < 70
 
   const luck = Math.floor(Math.random() * 11)
 
